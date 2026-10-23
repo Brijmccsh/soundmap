@@ -1,102 +1,63 @@
-# SoundMap
+<p align="center"><img src="brand/logo-horizontal.png" alt="SoundMap: Discover music worldwide" width="420"></p>
 
-Discover music worldwide. A mobile-first guessing game: hear a clip, guess the region, drop a pin on the world map, then get an AI-powered Song Deep Dive on the music you just heard.
+**SoundMap** is an ethnomusicology learning app that starts with your ears. You hear a sound from somewhere on Earth, guess where it's from on a map, and earn passport stamps. Then you meet the people who made it.
 
-Built for the Congressional App Challenge as a 90-second screen-recording demo.
+Built for the Congressional App Challenge.
 
----
+## Run it on your phone
 
-## What it does
-
-- **Splash** — Player enters a name, stored on-device.
-- **Play** — A 30-second clip plays (procedurally generated in the browser using Web Audio API, so each region has a distinct sound). Player picks a region, drops a pin on the map, submits a guess. Scoring rewards correct region + pin accuracy, costs XP for replays.
-- **Song Deep Dive** — One AI call (`/api/deep-dive`, Anthropic) explains the song's region, instruments, history, what to listen for, and a fun fact. If no API key is set, a hand-curated fallback ships in the same shape — the demo always works.
-- **Trivia / Lessons / Trending / Explore / Ranks** — Polished "Coming soon" screens previewing the rest of the app.
-
-## Stack
-
-- Next.js 14 (App Router), TypeScript
-- Tailwind CSS v3 + shadcn/ui (Radix Slot, no Base UI)
-- Web Audio API (no audio files bundled — synthesis per region)
-- Anthropic Messages API via plain `fetch` (no SDK dep)
-- localStorage for player + XP/streak/history (no database)
-
-## Run it
+You need Node 20.19.4 or newer ([nvm](https://github.com/nvm-sh/nvm) reads `.nvmrc`) and the **Expo Go** app on your phone (App Store or Google Play).
 
 ```bash
+nvm use
 npm install
-npm run dev
-# open http://localhost:3000
+npx expo start
 ```
 
-To enable real AI deep dives, set:
+Scan the QR code: on iPhone use the Camera app, on Android use Expo Go. If your phone and computer are on different networks, run `npx expo start --tunnel` instead.
+
+## Android APK
+
+An installable APK is built with EAS (profile `preview` in `eas.json`):
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-...   # in .env.local
+npx eas-cli@latest build -p android --profile preview
 ```
 
-If unset, the app falls back to bundled curated content for every round — the demo flow still works end-to-end.
+[APK download link]
 
-## Install on your phone (PWA)
+## Website
 
-SoundMap is installable as a Progressive Web App — taps to a home-screen icon, opens fullscreen with no browser bars, looks identical to a native app.
+The storytelling site is plain HTML, CSS and JavaScript in `website/`, with no build step. To preview it locally:
 
-**Same Wi-Fi as your laptop:**
-1. With `npm run dev` running, find your Mac's local IP: `ipconfig getifaddr en0`
-2. On your phone, open Safari (iOS) or Chrome (Android) → visit `http://<that-ip>:3000`
-3. **iOS:** tap Share → "Add to Home Screen" → Add. **Android:** three-dot menu → "Add to Home screen" or "Install app".
-4. Tap the SoundMap icon on your home screen — it opens fullscreen.
-
-**Anywhere on the internet:**
-Deploy the repo to any Next.js host (Vercel, Netlify, Cloudflare Pages, Render). Visit the HTTPS URL on your phone, then install via the same Add-to-Home-Screen flow.
-
-## Demo flow
-
-1. Splash → enter name → "Start"
-2. Play tab — Round 1 is Balinese gamelan. Tap ▶ to listen, pick **Southeast Asia**, drop a pin near Indonesia, submit.
-3. Result reveal shows correct region/city, distance, XP earned.
-4. Tap **Deep Dive** → AI explains gamelan's instruments, history, what to listen for.
-5. Tap **Next round** → repeat with a different region.
-
-See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for the exact click sequence used in the recording.
-
-## Project layout
-
-```
-app/
-  page.tsx              — splash / onboarding (light)
-  template.tsx          — route-in fade animation
-  layout.tsx            — root, fonts, metadata
-  (app)/                — dark in-app route group with bottom nav + game header
-    layout.tsx
-    play/page.tsx
-    deep-dive/page.tsx, [id]/page.tsx
-    trivia/, lessons/, trending/, explore/, ranks/   — placeholder tabs
-  api/deep-dive/route.ts — Anthropic call + curated fallback
-
-components/
-  ui/                   — shadcn primitives (button, card, input)
-  audio-player-card.tsx — ▶ + progress + replay-cost
-  region-grid.tsx       — 12-region picker
-  world-map.tsx         — stippled SVG world, click to drop pin
-  result-card.tsx       — guess reveal + XP breakdown + Deep Dive CTA
-  deep-dive-card.tsx    — AI/curated dive presentation
-  game-header.tsx       — sticky XP bar + level + streak
-  bottom-nav.tsx        — 7-tab bottom nav
-
-lib/
-  audio.ts              — Web Audio synth + 10 instrument presets
-  rounds.ts             — 12 rounds (region, target city, hint, audio preset)
-  regions.ts            — region constants
-  scoring.ts            — haversine distance + XP scoring
-  storage.ts            — player + game state in localStorage
-  deep-dive.ts          — curated fallback per round
-  utils.ts              — shadcn cn()
+```bash
+cd website && python3 -m http.server 8080
 ```
 
-## Design notes
+Deploy it on Render as a Static Site: leave the build command empty and set the publish directory to `website`.
 
-- **Mobile-first**: container is `max-w-md`, all type and spacing tuned for 390×844 (iPhone 14).
-- **Brand palette** is pulled directly from the logo: coral → pink → purple gradient on near-black.
-- **No real auth, no database** — pure local state. By design.
-- **Audio is synthesized**, not bundled. Each region has a unique scale, instrument timbre, tempo and motif, generated live with oscillators + filters. Avoids licensing and CORS issues completely; works offline.
+## What's inside
+
+- **Play:** eight "where in the world?" rounds, scored by region, distance and speed, with a flight arc to the answer.
+- **Lessons:** 19 listening lessons across 5 regions, with layer mixers, ear challenges and route maps. There's also a musical family tree.
+- **Learn:** quizzes (text, audio and map questions), spaced-review flashcards, and "explain it back" practice.
+- **Trending:** short editorial stories with cultural and historical context.
+- **SoundDeck:** pads, a 16-step sequencer, a keyboard, five unlockable packs, and a Rhythm Coach that judges your timing.
+
+## Tech
+
+- Expo SDK 54 and React Native 0.81, written in TypeScript, with expo-router.
+- Sound comes from our own synthesizer (`scripts/synth/`, Node, no dependencies), which renders every instrument. One engine (`src/audio/SoundEngine.ts`, expo-audio) plays everything on a drift-corrected step clock.
+- The map is Natural Earth 110m in the Equal Earth projection, generated by `scripts/build-map.mjs`. d3-geo draws the great-circle arcs, so no map SDK or API key is needed.
+- Lesson data is generated from `docs/content/lessons.json` by `scripts/build-lessons.mjs`.
+
+Regenerate generated files with `npm run build:map`, `npm run build:lessons` and `npm run synth`.
+
+## Credits
+
+- Lesson content, research and design by the student developer.
+- Every sound is synthesized by SoundMap's own code: no third-party recordings.
+- People in the lessons are shown as typographic portrait cards. There are no photographs of real people.
+- Map data: [Natural Earth](https://www.naturalearthdata.com/) via [world-atlas](https://github.com/topojson/world-atlas) (public domain).
+- Fonts: Young Serif, Hanken Grotesk and DM Mono (SIL Open Font License).
+- Icons: [Phosphor](https://phosphoricons.com/) (MIT), plus a custom instrument glyph set.
